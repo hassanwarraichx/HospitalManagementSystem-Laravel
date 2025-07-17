@@ -4,18 +4,24 @@
     <div class="container mt-5">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="bi bi-calendar-check me-2"></i> Appointment List</h4>
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i> Appointment List
+                </h4>
 
-                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('patient'))
-                    <a href="{{ route('appointments.create') }}" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Set Appointment
-                    </a>
-                @endif
+                @role('admin')
+                <a href="{{ route('admin.appointments.create') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Set Appointment
+                </a>
+                @elserole('patient')
+                <a href="{{ route('patient.appointments.create') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Set Appointment
+                </a>
+                @endrole
             </div>
 
             <div class="card-body">
 
-                {{-- ✅ Flash Message --}}
+                {{-- ✅ Flash Success --}}
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -23,10 +29,10 @@
                     </div>
                 @endif
 
-                {{-- 🔔 Notification Alert --}}
+                {{-- 🔔 Notifications --}}
                 @if(auth()->check() && auth()->user()->unreadNotifications->count())
                     <div class="alert alert-info">
-                        <strong>🔔 You have new notifications:</strong>
+                        <strong>🔔 New Notifications:</strong>
                         <ul class="mb-0 ps-3">
                             @foreach(auth()->user()->unreadNotifications as $notification)
                                 <li>{{ $notification->data['message'] ?? 'You have a new update.' }}</li>
@@ -83,7 +89,7 @@
                                 {{-- Notes --}}
                                 <td>{{ $appointment->notes ?? '—' }}</td>
 
-                                {{-- Actions --}}
+                                {{-- Action --}}
                                 <td>
                                     @if($appointment->status === 'pending' &&
                                          (auth()->user()->hasRole('admin') || auth()->user()->hasRole('doctor')))

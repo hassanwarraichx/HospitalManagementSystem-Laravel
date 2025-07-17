@@ -11,7 +11,7 @@
             </div>
 
             <div class="card-body">
-                {{-- ✅ Flash Success --}}
+                {{-- ✅ Flash Message --}}
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -19,29 +19,31 @@
                     </div>
                 @endif
 
-                {{-- ❌ Unauthorized Error --}}
+                {{-- ❌ Unauthorized --}}
                 @if($errors->has('unauthorized'))
                     <div class="alert alert-danger">
                         {{ $errors->first('unauthorized') }}
                     </div>
                 @endif
 
-                {{-- ✅ Appointment Form --}}
+                {{-- 📝 Appointment Form --}}
                 <form action="{{ route('appointments.store') }}" method="POST" novalidate>
                     @csrf
 
-                    {{-- 👤 Patient (Admin only) --}}
+                    {{-- 👤 Patient Field (only visible to admin) --}}
                     @if(Auth::user()->hasRole('admin'))
                         <div class="mb-3">
                             <label for="patient_id" class="form-label">🧑 Select Patient</label>
                             <select name="patient_id" id="patient_id"
                                     class="form-select @error('patient_id') is-invalid @enderror" required>
                                 <option value="">-- Choose Patient --</option>
-                                @foreach($patients as $pat)
-                                    <option value="{{ $pat->id }}" {{ old('patient_id') == $pat->id ? 'selected' : '' }}>
-                                        {{ $pat->user->name }} ({{ $pat->user->email }})
-                                    </option>
-                                @endforeach
+                                @isset($patients)
+                                    @foreach($patients as $pat)
+                                        <option value="{{ $pat->id }}" {{ old('patient_id') == $pat->id ? 'selected' : '' }}>
+                                            {{ $pat->user->name }} ({{ $pat->user->email }})
+                                        </option>
+                                    @endforeach
+                                @endisset
                             </select>
                             @error('patient_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -55,18 +57,20 @@
                         <select name="doctor_id" id="doctor_id"
                                 class="form-select @error('doctor_id') is-invalid @enderror" required>
                             <option value="">-- Choose Doctor --</option>
-                            @foreach($doctors as $doc)
-                                <option value="{{ $doc->id }}" {{ old('doctor_id') == $doc->id ? 'selected' : '' }}>
-                                    Dr. {{ $doc->user->name }} — {{ $doc->specialization->name ?? 'General' }}
-                                </option>
-                            @endforeach
+                            @isset($doctors)
+                                @foreach($doctors as $doc)
+                                    <option value="{{ $doc->id }}" {{ old('doctor_id') == $doc->id ? 'selected' : '' }}>
+                                        Dr. {{ $doc->user->name }} — {{ $doc->specialization->name ?? 'General' }}
+                                    </option>
+                                @endforeach
+                            @endisset
                         </select>
                         @error('doctor_id')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- 📅 Appointment Time --}}
+                    {{-- ⏰ Appointment Date & Time --}}
                     <div class="mb-3">
                         <label for="appointment_time" class="form-label">⏰ Appointment Date & Time</label>
                         <input type="datetime-local" id="appointment_time" name="appointment_time"
@@ -76,7 +80,7 @@
                         @error('appointment_time')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <div class="form-text">Note: Appointments cannot be booked on Sundays.</div>
+                        <div class="form-text">Appointments cannot be booked on Sundays or in the past.</div>
                     </div>
 
                     {{-- 📝 Notes --}}
@@ -97,7 +101,7 @@
         </div>
     </div>
 
-    {{-- 🚫 Prevent Sundays and Past Times --}}
+    {{-- 🚫 JS Logic to Prevent Sunday / Past Booking --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('appointment_time');
@@ -107,7 +111,7 @@
             input.addEventListener('change', function () {
                 const selectedDate = new Date(this.value);
                 if (selectedDate.getDay() === 0) {
-                    alert("Appointments cannot be booked on Sundays. Please select another day.");
+                    alert("Appointments cannot be booked on Sundays. Please choose another day.");
                     this.value = "";
                 }
             });

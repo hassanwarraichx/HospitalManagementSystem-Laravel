@@ -6,7 +6,6 @@ use App\Helpers\Helpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Auth\AuthService;
-use Faker\Extension\Helper;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -18,17 +17,23 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
-
+    /**
+     * Show the login form.
+     */
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    /**
+     * Handle login request using AuthService.
+     */
     public function login(LoginRequest $request)
     {
         try {
             if ($this->authService->login($request)) {
                 $request->session()->regenerate();
+
                 $role = Auth::user()->getRoleNames()->first();
 
                 return match ($role) {
@@ -46,10 +51,12 @@ class AuthController extends Controller
         }
     }
 
-    public function logout(){
+    /**
+     * Logout the currently authenticated user.
+     */
+    public function logout()
+    {
         Auth::logout();
         return redirect('/login');
-
     }
-
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,21 +10,21 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable,HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'email', 'password', 'profile_picture', 'is_active'
+        'name',
+        'email',
+        'password',
+        'profile_picture',
+        'is_active',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -34,30 +33,48 @@ class User extends Authenticatable
 
     /**
      * The attributes that should be cast.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * Relationship: A user may be a doctor.
+     */
     public function doctorProfile()
     {
         return $this->hasOne(DoctorProfile::class);
     }
 
+    /**
+     * Relationship: A user may be a patient.
+     */
     public function patientProfile()
     {
         return $this->hasOne(PatientProfile::class);
     }
 
+    /**
+     * Relationship: Appointments where user is the doctor.
+     */
     public function appointmentsAsDoctor()
     {
         return $this->hasMany(Appointment::class, 'doctor_id');
     }
 
+    /**
+     * Relationship: Appointments where user is the patient.
+     */
     public function appointmentsAsPatient()
     {
         return $this->hasMany(Appointment::class, 'patient_id');
+    }
+
+    /**
+     * Mark all unread notifications as read.
+     */
+    public function markAllNotificationsAsRead()
+    {
+        $this->unreadNotifications->markAsRead();
     }
 }

@@ -34,6 +34,8 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
 
+
+
                         <td>
                             @if($patient->profile_picture)
                                 <img src="{{ asset('storage/' . $patient->profile_picture) }}" alt="Profile Picture"

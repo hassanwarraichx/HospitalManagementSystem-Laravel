@@ -47,5 +47,7 @@ Route::middleware(['auth', 'role:doctor|admin'])->group(function () {
     Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
 });
 
+
+
 // 🚨 Optional: Add fallback for undefined routes
 // Route::fallback(fn() => response()->view('errors.404', [], 404));

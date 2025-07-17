@@ -35,7 +35,7 @@
                                 <i class="bi bi-people fs-1"></i>
                             </div>
                             <div class="card-footer bg-transparent border-top-0">
-                                <a href="{{ url('/patients') }}" class="text-white small">View Patients &rarr;</a>
+                                <a href="{{ route("admin.patients.index") }}" class="text-white small">View Patients &rarr;</a>
                             </div>
                         </div>
                     </div>

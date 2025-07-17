@@ -11,6 +11,8 @@ use App\Models\PatientProfile;
 use App\Models\Specialization;
 use Spatie\Permission\Models\Role;
 
+
+
 class DatabaseSeeder extends Seeder
 {
     public function run(): void

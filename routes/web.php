@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\PatientController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,8 +27,14 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
         return view('admin.dashboard');
-    })->name('admin.dashboard');
+    })->name('dashboard');
+    Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+    Route::get('/patients/create', [PatientController::class, 'create'])->name('patients.create');
+    Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
+   // Route::get('/doctors', [DoctorController::class, 'index'])->name('doctors.index');
+
 });
+

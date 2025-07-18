@@ -17,6 +17,7 @@ class AppointmentController extends Controller
         $this->service = $service;
     }
 
+    // ✅ Show the Create Appointment Form
     public function create()
     {
         $doctors = $this->service->getDoctors();
@@ -25,22 +26,36 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('doctors', 'patients'));
     }
 
+    // ✅ Store Appointment Based on Role
     public function store(Request $request)
     {
         try {
             $this->service->validateAndCreateAppointment($request->all());
-            return redirect()->route('appointments.create')->with('success', '✅ Appointment scheduled successfully!');
+
+            // 🔁 Redirect to correct "create" route based on role
+            if (Auth::user()->hasRole('admin')) {
+                return redirect()->route('admin.appointments.create')
+                    ->with('success', '✅ Appointment scheduled successfully!');
+            } elseif (Auth::user()->hasRole('patient')) {
+                return redirect()->route('patient.appointments.create')
+                    ->with('success', '✅ Appointment scheduled successfully!');
+            }
+
+            // Fallback (just in case)
+            return back()->with('success', '✅ Appointment scheduled!');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         }
     }
 
+    // ✅ Show Appointments (Admin/Doctor/Patient)
     public function index()
     {
         $appointments = $this->service->getAppointmentsForUser();
         return view('appointments.index', compact('appointments'));
     }
 
+    // ✅ Update Status (admin/doctor)
     public function updateStatus(Request $request, Appointment $appointment)
     {
         $request->validate([

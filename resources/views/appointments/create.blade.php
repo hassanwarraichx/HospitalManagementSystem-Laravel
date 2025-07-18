@@ -5,7 +5,15 @@
         <div class="card shadow border-0">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0"><i class="bi bi-calendar-plus me-2"></i> Set an Appointment</h4>
-                <a href="{{ route('appointments.index') }}" class="btn btn-light btn-sm">
+
+                @php
+                    $isAdmin = auth()->user()->hasRole('admin');
+                    $backRoute = $isAdmin
+                        ? route('admin.appointments.index')
+                        : route('patient.appointments.index');
+                @endphp
+
+                <a href="{{ $backRoute }}" class="btn btn-light btn-sm">
                     <i class="bi bi-arrow-left me-1"></i> Back to Appointments
                 </a>
             </div>
@@ -27,15 +35,20 @@
                 @endif
 
                 {{-- 📝 Appointment Form --}}
-                <form action="{{ route('appointments.store') }}" method="POST" novalidate>
+                @php
+                    $storeRoute = $isAdmin
+                        ? route('admin.appointments.store')
+                        : route('patient.appointments.store');
+                @endphp
+
+                <form action="{{ $storeRoute }}" method="POST" novalidate>
                     @csrf
 
-                    {{-- 👤 Patient Field (only visible to admin) --}}
-                    @if(Auth::user()->hasRole('admin'))
+                    {{-- 👤 Patient (admin only) --}}
+                    @if($isAdmin)
                         <div class="mb-3">
                             <label for="patient_id" class="form-label">🧑 Select Patient</label>
-                            <select name="patient_id" id="patient_id"
-                                    class="form-select @error('patient_id') is-invalid @enderror" required>
+                            <select name="patient_id" id="patient_id" class="form-select @error('patient_id') is-invalid @enderror" required>
                                 <option value="">-- Choose Patient --</option>
                                 @isset($patients)
                                     @foreach($patients as $pat)
@@ -54,8 +67,7 @@
                     {{-- 👨‍⚕️ Doctor --}}
                     <div class="mb-3">
                         <label for="doctor_id" class="form-label">👨‍⚕️ Select Doctor</label>
-                        <select name="doctor_id" id="doctor_id"
-                                class="form-select @error('doctor_id') is-invalid @enderror" required>
+                        <select name="doctor_id" id="doctor_id" class="form-select @error('doctor_id') is-invalid @enderror" required>
                             <option value="">-- Choose Doctor --</option>
                             @isset($doctors)
                                 @foreach($doctors as $doc)
@@ -70,7 +82,7 @@
                         @enderror
                     </div>
 
-                    {{-- ⏰ Appointment Date & Time --}}
+                    {{-- ⏰ Date & Time --}}
                     <div class="mb-3">
                         <label for="appointment_time" class="form-label">⏰ Appointment Date & Time</label>
                         <input type="datetime-local" id="appointment_time" name="appointment_time"
@@ -101,7 +113,7 @@
         </div>
     </div>
 
-    {{-- 🚫 JS Logic to Prevent Sunday / Past Booking --}}
+    {{-- 🚫 JS Logic to Prevent Sunday Booking --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('appointment_time');

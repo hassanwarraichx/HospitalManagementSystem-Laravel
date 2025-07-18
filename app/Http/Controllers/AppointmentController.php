@@ -55,6 +55,9 @@ class AppointmentController extends Controller
         return view('appointments.index', compact('appointments'));
     }
 
+
+
+
     // ✅ Update Status (admin/doctor)
     public function updateStatus(Request $request, Appointment $appointment)
     {

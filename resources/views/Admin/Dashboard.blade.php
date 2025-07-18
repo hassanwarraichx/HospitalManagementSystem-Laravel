@@ -71,7 +71,33 @@
                             </div>
                         </div>
                     </div>
+                    {{-- Medicines --}}
+                    <div class="col-md-6 col-xl-3 mb-4">
+                        <div class="card text-white bg-success h-100 shadow-sm">
+                            <div class="card-body d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h5 class="card-title">Medicines</h5>
+                                    <p class="card-text small">
+                                        Manage stock, expiry dates, and export reports
+                                    </p>
+                                </div>
+                                <i class="bi bi-capsule fs-1"></i>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0">
+                                <a href="{{ route('medicines.index') }}" class="text-white small">
+                                  Manage Medicines &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div> <!-- /row -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
             </div>
         </div>
     </div>

@@ -2,9 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Admin\PatientController;
+use App\Http\Controllers\MedicineController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,3 +65,27 @@ Route::get('/appointments/create', [AppointmentController::class, 'create'])->mi
 
 // 🚨 Fallback
 // Route::fallback(fn() => response()->view('errors.404', [], 404));
+
+// Medicines
+Route::prefix('medicines')->group(function () {
+    Route::get('/', [MedicineController::class, 'index'])->name('medicines.index');
+
+    Route::get('/create', [MedicineController::class, 'create'])->name('medicines.create'); 
+
+
+    Route::post('/', [MedicineController::class, 'store'])->name('medicines.store');
+
+    Route::get('/{medicine}/edit', [MedicineController::class, 'edit'])->name('medicines.edit');
+
+    Route::patch('/{medicine}', [MedicineController::class, 'update'])->name('medicines.update');
+
+    Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('medicines.destroy');
+
+});
+
+// Reports  
+Route::prefix('reports')->group(function () {
+    Route::get('/', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/medicines', [ReportController::class, 'exportMedicines'])->name('reports.medicines');
+});
+ 

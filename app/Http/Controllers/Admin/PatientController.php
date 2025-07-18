@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\DTOs\PatientDTO\CreatePatientDTO;
+use App\DTOs\PatientDTO\UpdatePatientDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePatientRequest;
+use App\Http\Requests\Admin\UpdatePatientRequest;
 use App\Models\User;
 use App\Services\Patient\PatientService;
 use Illuminate\Http\Request;
@@ -47,6 +49,35 @@ class PatientController extends Controller
 
         return redirect()->route('admin.patients.index')->with('success', 'Patient created successfully');
     }
+
+    public function edit(User $patient)
+    {
+        return view('admin.patients.edit', compact('patient'));
+    }
+
+    public function update(UpdatePatientRequest $request, User $patient)
+    {
+        $data = $request->validated();
+        $data['user_id'] = $patient->id;
+
+        $dto = UpdatePatientDTO::fromArray($data);
+        $this->patientService->update($dto);
+
+        return redirect()->route('admin.patients.index')->with('success', 'Patient updated successfully');
+    }
+
+    public function destroy(User $patient)
+    {
+        $patient->delete();
+        return redirect()->route('admin.patients.index')->with('success', 'Patient soft deleted successfully.');
+    }
+
+
+
+
+
+
+
 
 
 

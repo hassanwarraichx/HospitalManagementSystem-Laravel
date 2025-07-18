@@ -12,10 +12,10 @@ use App\Http\Controllers\Admin\PatientController;
 |--------------------------------------------------------------------------
 */
 
-// 🏠 Landing Page
-Route::get('/', fn() => view('welcome'))->name('home');
+// 🏠 Public Landing Page
+Route::get('/', fn () => view('welcome'))->name('home');
 
-// 🔐 Guest Routes
+// 🔐 Authentication (Guest Only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -24,26 +24,36 @@ Route::middleware('guest')->group(function () {
 // 🚪 Logout
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-// 🧭 Universal Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
+// 🧭 General Dashboard Redirect Based on Role
+Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-
-// 🧑 Patient Routes
+// -------------------------------------------------------------------
+// 👤 PATIENT ROUTES
+// -------------------------------------------------------------------
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'patient'])->name('dashboard');
+
+    // 📅 Appointments (Patient-specific)
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+
+    // ❌ Cancel appointment (optional)
+    Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
-
-// 🛡️ Admin Routes
+// -------------------------------------------------------------------
+// 🛡️ ADMIN ROUTES
+// -------------------------------------------------------------------
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
+    Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
 
-    // Appointments
+    // 📅 Appointments (Admin view + create)
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index'); // ✅ FIXED!
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
-    // Patients
+    // 👨‍⚕️ Patient Management
     Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
     Route::get('/patients/create', [PatientController::class, 'create'])->name('patients.create');
     Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
@@ -54,17 +64,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 });
 
-
-// 👨‍⚕️ Doctor + Admin Shared Routes
+// -------------------------------------------------------------------
+// 👨‍⚕️ DOCTOR & ADMIN SHARED ROUTES
+// -------------------------------------------------------------------
 Route::middleware(['auth', 'role:doctor|admin'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
 });
 
-
-// ✅ Optional: Global fallback for `appointments.store` if used without prefix
-Route::post('/appointments', [AppointmentController::class, 'store'])->middleware('auth')->name('appointments.store');
-Route::get('/appointments/create', [AppointmentController::class, 'create'])->middleware('auth')->name('appointments.create');
-
-// 🚨 Fallback
-// Route::fallback(fn() => response()->view('errors.404', [], 404));
+// ❌ Optional Fallback Route
+// Route::fallback(fn () => response()->view('errors.404', [], 404));

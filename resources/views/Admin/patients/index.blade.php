@@ -74,7 +74,12 @@
                         <td>{{ $patient->created_at->format('d M Y') }}</td>
 
                         <td>
-                            {{-- Actions (optional) --}}
+                            <a href="{{ route('admin.patients.edit', $patient->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('admin.patients.destroy', $patient->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this patient?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 @endforeach

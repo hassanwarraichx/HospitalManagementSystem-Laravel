@@ -23,9 +23,14 @@ class DoctorProfile extends Model
     /**
      * Relationship: DoctorProfile belongs to a User.
      */
+//    public function user()
+//    {
+//        return $this->belongsTo(User::class);
+//    }
+
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**

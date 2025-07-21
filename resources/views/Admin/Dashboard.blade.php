@@ -19,7 +19,7 @@
                                 <i class="bi bi-person-badge fs-1"></i>
                             </div>
                             <div class="card-footer bg-transparent border-top-0">
-                                <a href="{{ url('/doctors') }}" class="text-white small">View Doctors &rarr;</a>
+                                <a href="{{ route("admin.doctors.index") }}" class="text-white small">View Doctors &rarr;</a>
                             </div>
                         </div>
                     </div>

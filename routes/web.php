@@ -1,15 +1,14 @@
 <?php
 
-use App\Http\Controllers\Admin\DoctorController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\Admin\PatientController;
-use App\Http\Controllers\MedicineController;
 use Illuminate\Support\Facades\Broadcast;
-
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\DoctorController;
+use App\Http\Controllers\Admin\PatientController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +16,7 @@ use Illuminate\Support\Facades\Broadcast;
 |--------------------------------------------------------------------------
 */
 
+// ✅ Broadcasting routes
 Broadcast::routes(['middleware' => ['web', 'auth']]);
 Route::get('/broadcasting/auth-test', function () {
     return response()->json([
@@ -25,14 +25,10 @@ Route::get('/broadcasting/auth-test', function () {
     ]);
 });
 
-
-
-
 // 🏠 Public Landing Page
-
 Route::get('/', fn () => view('welcome'))->name('home');
 
-// 🔐 Authentication (Guest Only)
+// 🔐 Authentication Routes (Guests Only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -41,10 +37,11 @@ Route::middleware('guest')->group(function () {
 // 🚪 Logout
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-
-
-// 🧭 General Dashboard Redirect Based on Role
+// 🧭 Dashboard Redirection Based on Role
 Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// ✅ Global Notification Marking Route
+Route::middleware('auth')->post('/notifications/mark-all-read', [DashboardController::class, 'markAllNotificationsRead'])->name('notifications.markAllRead');
 
 // -------------------------------------------------------------------
 // 👤 PATIENT ROUTES
@@ -52,19 +49,18 @@ Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'patient'])->name('dashboard');
 
-    // 📅 Appointments (Patient-specific)
+    // 📅 Appointments (Patient)
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
-
-    // ❌ Cancel appointment (optional)
-    Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+    // ❌ Cancel removed intentionally
 });
 
+// -------------------------------------------------------------------
+// 👨‍⚕️ DOCTOR ROUTES
+// -------------------------------------------------------------------
 Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-
 });
 
 // -------------------------------------------------------------------
@@ -73,8 +69,8 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
 
-    // 📅 Appointments (Admin view + create)
-    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index'); // ✅ FIXED!
+    // 📅 Appointments
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
@@ -86,7 +82,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
 
-    //Doctor Management
+    // 🧑‍⚕️ Doctor Management
     Route::get('/doctors', [DoctorController::class, 'index'])->name('doctors.index');
     Route::get('/doctors/create', [DoctorController::class, 'create'])->name('doctors.create');
     Route::post('/doctors', [DoctorController::class, 'store'])->name('doctors.store');
@@ -96,46 +92,31 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // -------------------------------------------------------------------
-// 👨‍⚕️ DOCTOR & ADMIN SHARED ROUTES
+// 🤝 Shared Routes (Doctor + Admin)
 // -------------------------------------------------------------------
 Route::middleware(['auth', 'role:doctor|admin'])->group(function () {
-    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
 });
 
-//<<<<<<< HEAD
-
-// ✅ Optional: Global fallback for `appointments.store` if used without prefix
-Route::post('/appointments', [AppointmentController::class, 'store'])->middleware('auth')->name('appointments.store');
-Route::get('/appointments/create', [AppointmentController::class, 'create'])->middleware('auth')->name('appointments.create');
-
-// 🚨 Fallback
-// Route::fallback(fn() => response()->view('errors.404', [], 404));
-
-// Medicines
-Route::prefix('medicines')->group(function () {
+// -------------------------------------------------------------------
+// 💊 Medicines
+// -------------------------------------------------------------------
+Route::prefix('medicines')->middleware(['auth'])->group(function () {
     Route::get('/', [MedicineController::class, 'index'])->name('medicines.index');
-
     Route::get('/create', [MedicineController::class, 'create'])->name('medicines.create');
-
-
     Route::post('/', [MedicineController::class, 'store'])->name('medicines.store');
-
     Route::get('/{medicine}/edit', [MedicineController::class, 'edit'])->name('medicines.edit');
-
     Route::patch('/{medicine}', [MedicineController::class, 'update'])->name('medicines.update');
-
     Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('medicines.destroy');
-
 });
 
-// Reports
-Route::prefix('reports')->group(function () {
+// -------------------------------------------------------------------
+// 📈 Reports
+// -------------------------------------------------------------------
+Route::prefix('reports')->middleware(['auth'])->group(function () {
     Route::get('/', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/medicines', [ReportController::class, 'exportMedicines'])->name('reports.medicines');
 });
 
-//=======
-//// ❌ Optional Fallback Route
-//// Route::fallback(fn () => response()->view('errors.404', [], 404));
-//>>>>>>> main
+// ✅ Optional fallback route
+// Route::fallback(fn () => response()->view('errors.404', [], 404));

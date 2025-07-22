@@ -9,7 +9,6 @@
                 </h4>
 
                 <div class="d-flex gap-2">
-                    {{-- Back to Dashboard --}}
                     @role('admin')
                     <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-arrow-left me-1"></i> Dashboard
@@ -30,7 +29,7 @@
 
             <div class="card-body">
 
-                {{-- ✅ Flash Success --}}
+                {{-- ✅ Success Message --}}
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -38,13 +37,13 @@
                     </div>
                 @endif
 
-                {{-- 🔔 Notifications --}}
+                {{-- 🔔 Unread Notifications --}}
                 @if(auth()->check() && auth()->user()->unreadNotifications->count())
                     <div class="alert alert-info">
                         <strong>🔔 New Notifications:</strong>
                         <ul class="mb-0 ps-3">
                             @foreach(auth()->user()->unreadNotifications as $notification)
-                                <li>{{ $notification->data['message'] ?? 'You have a new update.' }}</li>
+                                <li>{{ $notification->data['message'] ?? '📢 You have a new update.' }}</li>
                             @endforeach
                         </ul>
                         <form action="{{ route('notifications.markAllRead') }}" method="POST" class="mt-2">
@@ -56,7 +55,7 @@
 
                 {{-- 📋 Appointment Table --}}
                 <div class="table-responsive mt-4">
-                    <table class="table table-bordered table-hover align-middle text-center">
+                    <table class="table table-bordered table-hover align-middle text-center shadow-sm">
                         <thead class="table-light">
                         <tr>
                             <th>👤 Patient</th>
@@ -70,14 +69,16 @@
                         <tbody>
                         @forelse($appointments as $appointment)
                             <tr>
-                                <td>{{ $appointment->patient->user->name ?? 'N/A' }}</td>
+                                <td>{{ optional($appointment->patient->user)->name ?? 'N/A' }}</td>
                                 <td>
-                                    Dr. {{ $appointment->doctor->user->name ?? 'N/A' }}<br>
+                                    Dr. {{ optional($appointment->doctor->user)->name ?? 'N/A' }}<br>
                                     <small class="text-muted">
-                                        ({{ $appointment->doctor->specialization->name ?? 'General' }})
+                                        ({{ optional($appointment->doctor->specialization)->name ?? 'General' }})
                                     </small>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($appointment->appointment_time)->format('d M Y, h:i A') }}</td>
+                                <td>
+                                    {{ \Carbon\Carbon::parse($appointment->appointment_time)->format('d M Y, h:i A') }}
+                                </td>
                                 <td>
                                     <span class="badge
                                         @if($appointment->status === 'approved') bg-success
@@ -88,13 +89,11 @@
                                     </span>
                                 </td>
                                 <td>{{ $appointment->notes ?? '—' }}</td>
-
-                                {{-- ⚙️ Action Buttons --}}
                                 <td>
                                     @if($appointment->status === 'pending' &&
-                                         (auth()->user()->hasRole('admin') || auth()->user()->hasRole('doctor')))
+                                        (auth()->user()->hasRole('admin') || auth()->user()->hasRole('doctor')))
                                         <div class="d-flex justify-content-center gap-1">
-                                            {{-- Approve Button --}}
+                                            {{-- ✅ Approve --}}
                                             <form method="POST" action="{{ route('appointments.updateStatus', $appointment->id) }}">
                                                 @csrf
                                                 @method('PATCH')
@@ -104,7 +103,7 @@
                                                 </button>
                                             </form>
 
-                                            {{-- Reject Button --}}
+                                            {{-- ❌ Reject --}}
                                             <form method="POST" action="{{ route('appointments.updateStatus', $appointment->id) }}">
                                                 @csrf
                                                 @method('PATCH')
@@ -127,7 +126,6 @@
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>

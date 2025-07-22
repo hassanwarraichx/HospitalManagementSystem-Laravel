@@ -42,7 +42,7 @@ class DashboardController extends Controller
             : collect();
 
         // ⚠️ Low Stock Medicines (threshold can be adjusted)
-        $lowStockMedicines = Medicine::where('quantity', '<=', 10)->get();
+        $lowStockMedicines = Medicine::where('stock', '<=', 10)->get();
 
         // 🔔 Notifications: latest 10 and count unread
         $notifications = $user->notifications()->latest()->take(10)->get();

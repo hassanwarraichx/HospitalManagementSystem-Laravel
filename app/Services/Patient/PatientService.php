@@ -19,27 +19,40 @@ class PatientService
         DB::beginTransaction();
 
         try {
+            // ✅ Create User
             $userData = collect($dto->toArray())->only(['name', 'email', 'password'])->toArray();
             $userData['password'] = Hash::make($userData['password']);
-            if($dto->profile_picture){
+
+            // ✅ Store profile picture (optional)
+            if ($dto->profile_picture) {
                 $path = $dto->profile_picture->store('public/profile_picture');
                 $userData['profile_picture'] = str_replace('public/', '', $path);
             }
+
             $user = User::create($userData);
             $user->assignRole('patient');
 
+            // ✅ Create Patient Profile
             $profileData = collect($dto->toArray())->only(['dob', 'gender', 'address', 'phone'])->toArray();
             $user->patientProfile()->create($profileData);
 
+            // ✅ Create Medical Histories (optional)
             foreach ($dto->medical_histories as $history) {
-                $path = null;
+                $description = $history['description'] ?? null;
+                $document = $history['document'] ?? null;
 
-                if (isset($history['document']) && $history['document']) {
-                    $path = $history['document']->store('medical_documents','public');
+                // 🔁 Skip entry if both fields are empty
+                if (empty($description) && empty($document)) {
+                    continue;
+                }
+
+                $path = null;
+                if ($document) {
+                    $path = $document->store('medical_documents', 'public');
                 }
 
                 $user->medicalHistories()->create([
-                    'description' => $history['description'],
+                    'description' => $description,
                     'document_path' => $path,
                 ]);
             }
@@ -51,6 +64,7 @@ class PatientService
             throw $e;
         }
     }
+
 
     public function update(UpdatePatientDTO $dto): void
     {

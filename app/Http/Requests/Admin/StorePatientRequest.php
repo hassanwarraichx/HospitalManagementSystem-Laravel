@@ -30,7 +30,7 @@ class StorePatientRequest extends FormRequest
             'address' => 'required|string',
             'phone' => 'required|string',
             'medical_histories' => 'nullable|array',
-            'medical_histories.*.description' => 'required|string|max:1000',
+            'medical_histories.*.description' => 'nullable|string|max:1000',
             'medical_histories.*.document' => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx|max:2048',
             'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ];

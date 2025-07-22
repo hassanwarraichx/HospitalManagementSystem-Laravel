@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Services\Doctor\DoctorService;
 use Illuminate\Http\Request;
 
-class DoctorController extends Controller
+class   DoctorController extends Controller
 {
     protected DoctorService $doctorService;
 

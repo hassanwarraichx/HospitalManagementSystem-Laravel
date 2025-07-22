@@ -15,24 +15,31 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Doctor Dashboard
         if ($user->hasRole('doctor')) {
-            $appointments = $user->doctorProfile
-                ? $user->doctorProfile->appointments()->latest()->get()
-                : collect();
-
-            return view('doctor.dashboard', compact('appointments'));
+            return redirect()->route('doctor.dashboard');
         }
 
-        // Patient Dashboard
         if ($user->hasRole('patient')) {
-            return $this->patient();
+            return redirect()->route('patient.dashboard');
         }
 
         // Admin Dashboard
         $unreadNotificationsCount = $user->unreadNotifications()->count();
-
         return view('dashboard.admin', compact('unreadNotificationsCount'));
+    }
+
+    /**
+     * Doctor Dashboard with upcoming appointments.
+     */
+    public function doctorDashboard()
+    {
+        $user = Auth::user();
+
+        $appointments = $user->doctorProfile
+            ? $user->doctorProfile->appointments()->latest()->get()
+            : collect();
+
+        return view('doctor.dashboard', compact('appointments'));
     }
 
     /**

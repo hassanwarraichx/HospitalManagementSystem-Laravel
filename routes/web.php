@@ -1,10 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\Admin\DoctorController;
 use App\Http\Controllers\Admin\PatientController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\ReportController;
+
+/*
+|--------------------------------------------------------------------------
+| 🌐 Web Routes - Hospital Management System
+|--------------------------------------------------------------------------
+*/
+
+// ✅ Broadcasting routes
+Broadcast::routes(['middleware' => ['web', 'auth']]);
+Route::get('/broadcasting/auth-test', function () {
+    return response()->json([
+        'loggedIn' => auth()->check(),
+        'user' => auth()->user()
+    ]);
+});
 
 // 🏠 Public Landing Page
 Route::get('/', fn () => view('welcome'))->name('home');
@@ -21,7 +40,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 // 🧭 Dashboard Redirection Based on Role
 Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// ✅ Global Notification Marking Route (for all roles)
+// ✅ Global Notification Marking Route
 Route::middleware('auth')->post('/notifications/mark-all-read', [DashboardController::class, 'markAllNotificationsRead'])->name('notifications.markAllRead');
 
 // -------------------------------------------------------------------
@@ -34,9 +53,14 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+    // ❌ Cancel removed intentionally
+});
 
-    // ❌ Removed cancel route
-    // Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+// -------------------------------------------------------------------
+// 👨‍⚕️ DOCTOR ROUTES
+// -------------------------------------------------------------------
+Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 // -------------------------------------------------------------------
@@ -45,7 +69,7 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
 
-    // 📅 Appointments (Admin)
+    // 📅 Appointments
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
@@ -57,15 +81,42 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/patients/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit');
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+
+    // 🧑‍⚕️ Doctor Management
+    Route::get('/doctors', [DoctorController::class, 'index'])->name('doctors.index');
+    Route::get('/doctors/create', [DoctorController::class, 'create'])->name('doctors.create');
+    Route::post('/doctors', [DoctorController::class, 'store'])->name('doctors.store');
+    Route::get('/doctors/{doctor}/edit', [DoctorController::class, 'edit'])->name('doctors.edit');
+    Route::put('/doctors/{doctor}', [DoctorController::class, 'update'])->name('doctors.update');
+    Route::delete('/doctors/{doctor}', [DoctorController::class, 'destroy'])->name('doctors.destroy');
 });
 
 // -------------------------------------------------------------------
-// 👨‍⚕️ DOCTOR & ADMIN SHARED ROUTES (Appointment Status Control)
+// 🤝 Shared Routes (Doctor + Admin)
 // -------------------------------------------------------------------
 Route::middleware(['auth', 'role:doctor|admin'])->group(function () {
-    // Status update (approve/reject)
     Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
 });
 
-// Optional Fallback
+// -------------------------------------------------------------------
+// 💊 Medicines
+// -------------------------------------------------------------------
+Route::prefix('medicines')->middleware(['auth'])->group(function () {
+    Route::get('/', [MedicineController::class, 'index'])->name('medicines.index');
+    Route::get('/create', [MedicineController::class, 'create'])->name('medicines.create');
+    Route::post('/', [MedicineController::class, 'store'])->name('medicines.store');
+    Route::get('/{medicine}/edit', [MedicineController::class, 'edit'])->name('medicines.edit');
+    Route::patch('/{medicine}', [MedicineController::class, 'update'])->name('medicines.update');
+    Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('medicines.destroy');
+});
+
+// -------------------------------------------------------------------
+// 📈 Reports
+// -------------------------------------------------------------------
+Route::prefix('reports')->middleware(['auth'])->group(function () {
+    Route::get('/', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/medicines', [ReportController::class, 'exportMedicines'])->name('reports.medicines');
+});
+
+// ✅ Optional fallback route
 // Route::fallback(fn () => response()->view('errors.404', [], 404));

@@ -60,6 +60,34 @@
 <main class="container py-4">
     @yield('content')
 </main>
+@if(auth()->check() && auth()->user()->hasRole('admin'))
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <script>
+
+        Pusher.logToConsole = true;
+
+        var pusher = new Pusher('{{ env('PUSHER_APP_KEY') }}', {
+            cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+            forceTLS: true,
+            authEndpoint: '/broadcasting/auth',
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }
+        });
+
+        var channel = pusher.subscribe('medicine-alert');
+        channel.bind('send-message', function(data) {
+            if (data.message) {
+                document.getElementById('medicineToastBody').innerText = data.message;
+                var toast = new bootstrap.Toast(document.getElementById('medicineToast'));
+                toast.show();
+            }
+        });
+    </script>
+@endif
+
 
 {{-- ✅ Global Notification Toast --}}
 <div id="global-notification" class="toast align-items-center text-white bg-info border-0 position-fixed bottom-0 end-0 m-4 shadow"
@@ -77,6 +105,18 @@
 
 {{-- ✅ Bootstrap JS Bundle --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="medicineToast" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Medicine Alert</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="medicineToastBody">
+            <!-- Message goes here -->
+        </div>
+    </div>
+</div>
+
 
 {{-- ✅ Notification Handler --}}
 @auth

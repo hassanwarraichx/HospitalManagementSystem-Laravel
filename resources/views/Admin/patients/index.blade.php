@@ -10,6 +10,8 @@
 
         <div class="mb-3">
             <a href="{{ route('admin.patients.create') }}" class="btn btn-primary">+ Register New Patient</a>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-primary bi-arrow-left"> Back to Dashboard</a>
+
         </div>
 
         @if ($patients->count())

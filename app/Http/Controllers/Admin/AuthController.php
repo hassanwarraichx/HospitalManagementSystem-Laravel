@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\MedicineAlertEvent;
 use App\Helpers\Helpers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
@@ -33,8 +34,11 @@ class AuthController extends Controller
         try {
             if ($this->authService->login($request)) {
                 $request->session()->regenerate();
-
+                $user=Auth::user();
                 $role = Auth::user()->getRoleNames()->first();
+                if ($role === 'admin') {
+                    event(new MedicineAlertEvent($user));
+                }
 
                 return match ($role) {
                     'admin' => redirect()->route('admin.dashboard'),

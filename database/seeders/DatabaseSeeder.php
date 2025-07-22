@@ -10,6 +10,7 @@ use App\Models\DoctorProfile;
 use App\Models\PatientProfile;
 use App\Models\Specialization;
 use Spatie\Permission\Models\Role;
+use App\Models\Medicine;
 
 
 
@@ -69,5 +70,57 @@ class DatabaseSeeder extends Seeder
                 'address' => "Address $i"
             ]);
         }
+        // Create Medicines
+        $medicines = [
+            [
+                'name' => 'Paracetamol 500mg',
+                'brand' => 'ABC Pharma',
+                'stock' => 200,
+                'expiry_date' => now()->addMonths(12),
+                'price' => 5.50,
+            ],
+            [
+                'name' => 'Ibuprofen 200mg',
+                'brand' => 'XYZ Pharma',
+                'stock' => 150,
+                'expiry_date' => now()->addMonths(10),
+                'price' => 8.75,
+            ],
+            [
+                'name' => 'Amoxicillin 250mg',
+                'brand' => 'MediCare',
+                'stock' => 80,
+                'expiry_date' => now()->addMonths(6),
+                'price' => 12.00,
+            ],
+            [
+                'name' => 'Cough Syrup 100ml',
+                'brand' => 'Herbal Labs',
+                'stock' => 50,
+                'expiry_date' => now()->addMonths(5),
+                'price' => 6.25,
+            ],
+            [
+                'name' => 'Vitamin D3 1000 IU',
+                'brand' => 'SunPharma',
+                'stock' => 120,
+                'expiry_date' => now()->addMonths(14),
+                'price' => 3.50,
+            ],
+        ];
+
+        foreach ($medicines as $medicine) {
+            Medicine::firstOrCreate(
+                ['name' => $medicine['name']], 
+                [
+                    'brand' => $medicine['brand'],
+                    'stock' => $medicine['stock'],
+                    'expiry_date' => $medicine['expiry_date'],
+                    'price' => $medicine['price'],
+                ]
+            );
+        }
+
+         
     }
 }

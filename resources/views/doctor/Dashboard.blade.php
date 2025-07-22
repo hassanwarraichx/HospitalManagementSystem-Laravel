@@ -48,7 +48,7 @@
                 <strong>⚠️ Low Stock:</strong>
                 <ul class="mb-0 ps-3">
                     @foreach($lowStockMedicines as $med)
-                        <li>{{ $med->name }} - {{ $med->quantity }} left (Expiry: {{ \Carbon\Carbon::parse($med->expiry_date)->format('d M Y') }})</li>
+                        <li>{{ $med->name }} - {{ $med->stock }} left (Expiry: {{ \Carbon\Carbon::parse($med->expiry_date)->format('d M Y') }})</li>
                     @endforeach
                 </ul>
             </div>

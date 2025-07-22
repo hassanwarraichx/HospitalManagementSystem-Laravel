@@ -7,9 +7,25 @@
             <h4 class="mb-0">
                 <i class="bi bi-capsule me-2"></i> Medicines Inventory
             </h4>
-            <a href="{{ route('medicines.create') }}" class="btn btn-light btn-sm">
-                <i class="bi bi-plus-circle me-1"></i> Add New Medicine
-            </a>
+
+            <div class="d-flex gap-2">
+                {{-- Back to Dashboard --}}
+                @role('admin')
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                <a href="{{ route('medicines.create') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Medicine
+                </a>
+                @elserole('pharmacist')
+                <a href="{{ route('pharmacist.dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                <a href="{{ route('medicines.create') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Medicine
+                </a>
+                @endrole
+            </div>
         </div>
 
         <div class="card-body">

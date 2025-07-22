@@ -7,6 +7,19 @@
             <h4 class="mb-0">
                 <i class="bi bi-clipboard-data me-2"></i> Inventory Reports
             </h4>
+
+            <div class="d-flex gap-2">
+                {{-- Back to Dashboard --}}
+                @role('admin')
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                @elserole('pharmacist')
+                <a href="{{ route('pharmacist.dashboard') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Dashboard
+                </a>
+                @endrole
+            </div>
         </div>
 
         <div class="card-body">

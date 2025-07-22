@@ -21,7 +21,7 @@ class DashboardController extends Controller
                 ? $user->doctorProfile->appointments()->latest()->get()
                 : collect();
 
-            return view('dashboard.doctor', compact('appointments'));
+            return view('doctor.dashboard', compact('appointments'));
         }
 
         // Patient Dashboard

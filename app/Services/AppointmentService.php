@@ -18,12 +18,20 @@ class AppointmentService
 {
     public function getDoctors()
     {
-        return DoctorProfile::with('user')->get();
+        return DoctorProfile::with(['user', 'specialization'])
+            ->whereHas('user', function ($query) {
+                $query->whereNull('deleted_at');
+            })
+            ->get();
     }
 
     public function getPatients()
     {
-        return PatientProfile::with('user')->get();
+        return PatientProfile::with(['user'])
+            ->whereHas('user', function ($query) {
+                $query->whereNull('deleted_at');
+            })
+            ->get();
     }
 
     /**

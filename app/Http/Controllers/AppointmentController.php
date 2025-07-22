@@ -17,8 +17,10 @@ class AppointmentController extends Controller
         $this->service = $service;
     }
 
-    // ✅ Show the Create Appointment Form
-    public function create()
+    /**
+     * Show the appointment creation form.
+     */
+    public function create(Request $request)
     {
         $doctors = $this->service->getDoctors();
         $patients = Auth::user()->hasRole('admin') ? $this->service->getPatients() : null;
@@ -26,39 +28,40 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('doctors', 'patients'));
     }
 
-    // ✅ Store Appointment Based on Role
+    /**
+     * Handle storing a new appointment.
+     */
     public function store(Request $request)
     {
         try {
-            $this->service->validateAndCreateAppointment($request->all());
+            $data = $request->all();
 
-            // 🔁 Redirect to correct "create" route based on role
-            if (Auth::user()->hasRole('admin')) {
-                return redirect()->route('admin.appointments.create')
-                    ->with('success', '✅ Appointment scheduled successfully!');
-            } elseif (Auth::user()->hasRole('patient')) {
-                return redirect()->route('patient.appointments.create')
-                    ->with('success', '✅ Appointment scheduled successfully!');
+            if (Auth::user()->hasRole('patient')) {
+                $data['patient_id'] = Auth::user()->patientProfile->id ?? null;
             }
 
-            // Fallback (just in case)
-            return back()->with('success', '✅ Appointment scheduled!');
+            $this->service->validateAndCreateAppointment($data);
+
+            return redirect()
+                ->route(Auth::user()->hasRole('admin') ? 'admin.appointments.create' : 'patient.dashboard')
+                ->with('success', '✅ Appointment successfully ' . (Auth::user()->hasRole('admin') ? 'scheduled' : 'booked') . '!');
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         }
     }
 
-    // ✅ Show Appointments (Admin/Doctor/Patient)
+    /**
+     * List all appointments based on role.
+     */
     public function index()
     {
         $appointments = $this->service->getAppointmentsForUser();
         return view('appointments.index', compact('appointments'));
     }
 
-
-
-
-    // ✅ Update Status (admin/doctor)
+    /**
+     * Update appointment status (admin/doctor only).
+     */
     public function updateStatus(Request $request, Appointment $appointment)
     {
         $request->validate([
@@ -67,6 +70,8 @@ class AppointmentController extends Controller
 
         $this->service->updateStatus($appointment, $request->status);
 
-        return back()->with('success', '✅ Appointment status updated successfully!');
+        return back()->with('success', '✅ Appointment status updated.');
     }
+
+    // 🧹 Cancel method removed — canceling not allowed from patient dashboard.
 }

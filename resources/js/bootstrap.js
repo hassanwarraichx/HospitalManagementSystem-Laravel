@@ -1,32 +1,40 @@
-/**
- * We'll load the axios HTTP library which allows us to easily issue requests
- * to our Laravel back-end. This library automatically handles sending the
- * CSRF token as a header based on the value of the "XSRF" token cookie.
- */
-
+// ✅ Load Axios with CSRF token support
 import axios from 'axios';
 window.axios = axios;
-
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-/**
- * Echo exposes an expressive API for subscribing to channels and listening
- * for events that are broadcast by Laravel. Echo and event broadcasting
- * allows your team to easily build robust real-time web applications.
- */
+// ✅ Import Echo and Pusher for Laravel real-time broadcasting
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-// import Echo from 'laravel-echo';
+window.Pusher = Pusher;
 
-// import Pusher from 'pusher-js';
-// window.Pusher = Pusher;
+// ✅ Initialize Echo only if all required variables are defined
+try {
+    const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+    const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1';
+    const pusherHost = import.meta.env.VITE_PUSHER_HOST || `ws-${pusherCluster}.pusher.com`;
+    const pusherPort = import.meta.env.VITE_PUSHER_PORT ? parseInt(import.meta.env.VITE_PUSHER_PORT) : 443;
+    const scheme = import.meta.env.VITE_PUSHER_SCHEME ?? 'https';
 
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: import.meta.env.VITE_PUSHER_APP_KEY,
-//     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
-//     wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-//     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
-//     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-//     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
-//     enabledTransports: ['ws', 'wss'],
-// });
+    if (!pusherKey) {
+        console.warn("⚠️ VITE_PUSHER_APP_KEY is missing. Real-time features will not work.");
+    } else {
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: pusherKey,
+            cluster: pusherCluster,
+            wsHost: pusherHost,
+            wsPort: pusherPort,
+            wssPort: pusherPort,
+            forceTLS: scheme === 'https',
+            encrypted: true,
+            disableStats: true,
+            enabledTransports: ['ws', 'wss'],
+        });
+
+        console.log("✅ Echo initialized for real-time broadcasting");
+    }
+} catch (e) {
+    console.error("❌ Echo initialization failed:", e);
+}

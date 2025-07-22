@@ -6,16 +6,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\Admin\PatientController;
 
-/*
-|--------------------------------------------------------------------------
-| 🌐 Web Routes - Hospital Management System
-|--------------------------------------------------------------------------
-*/
-
 // 🏠 Public Landing Page
 Route::get('/', fn () => view('welcome'))->name('home');
 
-// 🔐 Authentication (Guest Only)
+// 🔐 Authentication Routes (Guests Only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -24,8 +18,11 @@ Route::middleware('guest')->group(function () {
 // 🚪 Logout
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-// 🧭 General Dashboard Redirect Based on Role
+// 🧭 Dashboard Redirection Based on Role
 Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// ✅ Global Notification Marking Route (for all roles)
+Route::middleware('auth')->post('/notifications/mark-all-read', [DashboardController::class, 'markAllNotificationsRead'])->name('notifications.markAllRead');
 
 // -------------------------------------------------------------------
 // 👤 PATIENT ROUTES
@@ -33,13 +30,13 @@ Route::middleware('auth')->get('/dashboard', [DashboardController::class, 'index
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'patient'])->name('dashboard');
 
-    // 📅 Appointments (Patient-specific)
+    // 📅 Appointments (Patient)
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
-    // ❌ Cancel appointment (optional)
-    Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+    // ❌ Removed cancel route
+    // Route::delete('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
 // -------------------------------------------------------------------
@@ -48,8 +45,8 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
 
-    // 📅 Appointments (Admin view + create)
-    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index'); // ✅ FIXED!
+    // 📅 Appointments (Admin)
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
 
@@ -60,17 +57,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/patients/{patient}/edit', [PatientController::class, 'edit'])->name('patients.edit');
     Route::put('/patients/{patient}', [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
-
-
 });
 
 // -------------------------------------------------------------------
-// 👨‍⚕️ DOCTOR & ADMIN SHARED ROUTES
+// 👨‍⚕️ DOCTOR & ADMIN SHARED ROUTES (Appointment Status Control)
 // -------------------------------------------------------------------
 Route::middleware(['auth', 'role:doctor|admin'])->group(function () {
-    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+    // Status update (approve/reject)
     Route::patch('/appointments/{appointment}/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
 });
 
-// ❌ Optional Fallback Route
+// Optional Fallback
 // Route::fallback(fn () => response()->view('errors.404', [], 404));

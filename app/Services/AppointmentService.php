@@ -5,10 +5,14 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\DoctorProfile;
 use App\Models\PatientProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\AppointmentStatusChanged;
+use App\Notifications\AppointmentCreatedNotification;
+use App\Notifications\AppointmentBookedNotification;
 
 class AppointmentService
 {
@@ -22,6 +26,9 @@ class AppointmentService
         return PatientProfile::with('user')->get();
     }
 
+    /**
+     * Validate and create a new appointment.
+     */
     public function validateAndCreateAppointment(array $data)
     {
         $rules = [
@@ -49,9 +56,9 @@ class AppointmentService
             ]);
         }
 
-        $time = $data['appointment_time'];
-        $bufferStart = now()->parse($time)->subMinutes(30);
-        $bufferEnd = now()->parse($time)->addMinutes(30);
+        $time = now()->parse($data['appointment_time']);
+        $bufferStart = $time->copy()->subMinutes(30);
+        $bufferEnd = $time->copy()->addMinutes(30);
 
         $alreadyBooked = Appointment::where('doctor_id', $data['doctor_id'])
             ->whereBetween('appointment_time', [$bufferStart, $bufferEnd])
@@ -59,40 +66,70 @@ class AppointmentService
 
         if ($alreadyBooked) {
             throw ValidationException::withMessages([
-                'appointment_time' => '⚠️ Doctor already has an appointment near this time. Choose another slot.',
+                'appointment_time' => '⚠️ This doctor is already booked near this time. Please select a different slot.',
             ]);
         }
 
-        return Appointment::create([
+        $appointment = Appointment::create([
             'patient_id' => $patientId,
             'doctor_id' => $data['doctor_id'],
             'appointment_time' => $data['appointment_time'],
             'notes' => $data['notes'] ?? null,
             'status' => 'pending',
         ]);
+
+        try {
+            // Notify Patient (DB + Realtime, NO Email)
+            $patientUser = optional(PatientProfile::find($patientId))->user;
+            if ($patientUser) {
+                Notification::send($patientUser, new AppointmentCreatedNotification($appointment));
+            }
+
+            // ✅ Notify all Admins (DB + Realtime)
+            $admins = User::role('admin')->get();
+            Notification::send($admins, new AppointmentBookedNotification($appointment));
+
+        } catch (\Throwable $e) {
+            logger()->warning('⚠️ Notification error: ' . $e->getMessage());
+        }
+
+        return $appointment;
     }
 
+    /**
+     * Get appointments based on user role.
+     */
     public function getAppointmentsForUser()
     {
         $user = Auth::user();
 
         return match (true) {
-            $user->hasRole('doctor') => Appointment::where('doctor_id', $user->doctorProfile->id)->orderBy('appointment_time')->get(),
-            $user->hasRole('patient') => Appointment::where('patient_id', $user->patientProfile->id)->orderBy('appointment_time')->get(),
-            default => Appointment::orderBy('appointment_time')->get()
+            $user->hasRole('doctor') && $user->doctorProfile =>
+            Appointment::where('doctor_id', $user->doctorProfile->id)->latest()->get(),
+
+            $user->hasRole('patient') && $user->patientProfile =>
+            Appointment::where('patient_id', $user->patientProfile->id)->latest()->get(),
+
+            $user->hasRole('admin') =>
+            Appointment::latest()->get(),
+
+            default => collect(),
         };
     }
 
+    /**
+     * Update status and notify patient (Email sent here on approval).
+     */
     public function updateStatus(Appointment $appointment, string $status)
     {
         $appointment->update(['status' => $status]);
 
         try {
             if ($appointment->patient?->user) {
-                $appointment->patient->user->notify(new AppointmentStatusChanged($appointment));
+                Notification::send($appointment->patient->user, new AppointmentStatusChanged($appointment));
             }
-        } catch (\Exception $e) {
-            logger()->warning('Notification failed: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            logger()->warning('⚠️ Status update notification failed: ' . $e->getMessage());
         }
     }
 }

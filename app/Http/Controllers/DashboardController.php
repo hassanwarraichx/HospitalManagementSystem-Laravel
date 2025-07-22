@@ -1,50 +1,64 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Appointment;
 
 class DashboardController extends Controller
 {
     /**
-     * Display a general dashboard view.
+     * Redirect user to their appropriate dashboard based on role.
      */
     public function index()
     {
         $user = Auth::user();
 
-        // Redirect to role-specific dashboards
+        // Doctor Dashboard
         if ($user->hasRole('doctor')) {
-            $appointments = optional($user->doctorProfile)
+            $appointments = $user->doctorProfile
                 ? $user->doctorProfile->appointments()->latest()->get()
                 : collect();
 
             return view('dashboard.doctor', compact('appointments'));
         }
 
+        // Patient Dashboard
         if ($user->hasRole('patient')) {
-            return redirect()->route('patient.dashboard');
+            return $this->patient();
         }
 
-        return view('dashboard.admin');
+        // Admin Dashboard
+        $unreadNotificationsCount = $user->unreadNotifications()->count();
+
+        return view('dashboard.admin', compact('unreadNotificationsCount'));
     }
 
     /**
-     * Show patient-specific dashboard view.
+     * Show Patient Dashboard with appointments and notification summary.
      */
     public function patient()
     {
         $user = Auth::user();
 
-        // Get appointments for the patient
-        $appointments = optional($user->patientProfile)
+        $appointments = $user->patientProfile
             ? $user->patientProfile->appointments()->latest()->get()
             : collect();
 
-        // Count unread notifications
         $unreadNotificationsCount = $user->unreadNotifications()->count();
 
-        return view('patient.Dashboard', compact('appointments', 'user', 'unreadNotificationsCount'));
+        return view('patient.dashboard', compact('appointments', 'user', 'unreadNotificationsCount'));
+    }
+
+    /**
+     * Mark all notifications as read.
+     */
+    public function markAllNotificationsRead(Request $request)
+    {
+        $user = $request->user();
+        $user->unreadNotifications->markAsRead();
+
+        return back()->with('success', '🔔 All notifications marked as read.');
     }
 }
-

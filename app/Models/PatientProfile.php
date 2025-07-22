@@ -30,6 +30,7 @@ class PatientProfile extends Model
 
     public function appointments()
     {
-        return $this->hasMany(Appointment::class, 'patient_id', 'user_id');
+        // ✅ FIX: Correct the foreign and local key mapping
+        return $this->hasMany(Appointment::class, 'patient_id', 'id');
     }
 }

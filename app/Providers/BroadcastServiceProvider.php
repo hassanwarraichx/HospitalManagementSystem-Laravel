@@ -12,8 +12,12 @@ class BroadcastServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Broadcast::routes();
+        // 🔒 Only allow broadcasting routes for authenticated users
+        Broadcast::routes([
+            'middleware' => ['web', 'auth'],
+        ]);
 
+        // 📡 Load channel authorization logic
         require base_path('routes/channels.php');
     }
 }

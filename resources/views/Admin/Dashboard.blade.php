@@ -35,7 +35,7 @@
                                 <i class="bi bi-people fs-1"></i>
                             </div>
                             <div class="card-footer bg-transparent border-top-0">
-                                <a href="{{ route("admin.patients.index") }}" class="text-white small">View Patients &rarr;</a>
+                                <a href="{{ route('admin.patients.index') }}" class="text-white small">View Patients &rarr;</a>
                             </div>
                         </div>
                     </div>
@@ -51,7 +51,7 @@
                                 <i class="bi bi-calendar-check fs-1"></i>
                             </div>
                             <div class="card-footer bg-transparent border-top-0">
-                                <a href="{{ route('appointments.index') }}" class="text-white small">View Appointments &rarr;</a>
+                                <a href="{{ route('admin.appointments.index') }}" class="text-white small">View Appointments &rarr;</a>
                             </div>
                         </div>
                     </div>
@@ -71,8 +71,51 @@
                             </div>
                         </div>
                     </div>
-                </div> <!-- /row -->
+                </div>
+
+                {{-- 🔔 Real-Time Toast Notification --}}
+                <div id="admin-toast" class="toast align-items-center text-white bg-dark border-0 position-fixed bottom-0 end-0 m-4"
+                     role="alert" aria-live="assertive" aria-atomic="true" style="display: none; z-index: 1060;">
+                    <div class="d-flex">
+                        <div class="toast-body" id="admin-toast-message">
+                            🔔 New notification received.
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                                onclick="document.getElementById('admin-toast').style.display='none'"></button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    @auth
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof Echo !== 'undefined') {
+                    Echo.private('App.Models.User.{{ Auth::id() }}')
+                        .notification((notification) => {
+                            console.log('🔔 Admin Notification:', notification);
+
+                            const toast = document.getElementById('admin-toast');
+                            const msg = document.getElementById('admin-toast-message');
+
+                            let message = notification?.message || notification?.data?.message || 'You have a new notification.';
+                            msg.textContent = "🔔 " + message;
+
+                            if (toast) {
+                                toast.style.display = 'block';
+                                toast.classList.add('show');
+
+                                setTimeout(() => {
+                                    toast.classList.remove('show');
+                                    toast.style.display = 'none';
+                                }, 6000);
+                            }
+                        });
+                }
+            });
+        </script>
+    @endauth
+@endpush

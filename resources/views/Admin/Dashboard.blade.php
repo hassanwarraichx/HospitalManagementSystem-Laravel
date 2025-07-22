@@ -87,7 +87,25 @@
                         </div>
                     </div>
                 </div>
+                {{-- Billing --}}
+                <div class="col-md-6 col-xl-3 mb-4">
+                    <div class="card text-white bg-dark h-100 shadow-sm">
+                        <div class="card-body d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="card-title">Billing</h5>
+                                <p class="card-text small">Generate bills for appointments with prescriptions</p>
+                            </div>
+                            <i class="bi bi-receipt fs-1"></i>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <a href="{{ route('admin.billing.index') }}" class="text-white small">Go to Billing &rarr;</a>
+                        </div>
+                    </div>
+                </div>
             </div> {{-- End Row --}}
+
+
+
 
             {{-- 🔔 Real-Time Toast Notification --}}
             <div id="admin-toast" class="toast align-items-center text-white bg-dark border-0 position-fixed bottom-0 end-0 m-4"

@@ -21,6 +21,12 @@ class Appointment extends Model
         return $this->belongsTo(PatientProfile::class);
     }
 
+    public function bill()
+    {
+        return $this->hasOne(Bill::class);
+    }
+
+
     public function doctor()
     {
         return $this->belongsTo(DoctorProfile::class);
@@ -31,8 +37,5 @@ class Appointment extends Model
         return $this->hasOne(Prescription::class);
     }
 
-    public function bill()
-    {
-        return $this->hasOne(Bill::class);
-    }
+
 }

@@ -89,11 +89,25 @@
                             </span>
                             </td>
                             <td>
-                                {{-- 👁️ View Only --}}
-                                <button class="btn btn-sm btn-outline-info" title="Coming Soon" disabled>
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                                @if($appointment->prescription)
+                                    <a href="{{ route('patient.prescriptions.export', $appointment->id) }}"
+                                       class="btn btn-sm btn-outline-primary mb-1" title="Download Prescription">
+                                        <i class="bi bi-file-earmark-arrow-down"></i> Rx
+                                    </a>
+                                @endif
+
+                                @if($appointment->bill)
+                                    <a href="{{ route('patient.bills.export', $appointment->id) }}"
+                                       class="btn btn-sm btn-outline-success mb-1" title="Download Bill">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> Bill
+                                    </a>
+                                @endif
+
+                                @if(!$appointment->prescription && !$appointment->bill)
+                                    <span class="text-muted">N/A</span>
+                                @endif
                             </td>
+
                         </tr>
                     @endforeach
                     </tbody>

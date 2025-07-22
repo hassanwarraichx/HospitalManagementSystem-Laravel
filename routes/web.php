@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BillingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\Admin\AuthController;
@@ -51,6 +52,8 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+    Route::get('/billing/{appointment}/export-bill', [BillingController::class, 'exportBill'])->name('bills.export');
+    Route::get('/billing/{appointment}/export-prescription', [BillingController::class, 'exportPrescription'])->name('prescriptions.export');
 });
 
 // -------------------------------------------------------------------
@@ -93,6 +96,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // 🧑‍⚕️ Doctor Management
     Route::resource('doctors', DoctorController::class)->except(['show']);
+
+    Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('billing/{appointment}', [BillingController::class, 'create'])->name('billing.create');
+    Route::post('billing/{appointment}', [BillingController::class, 'store'])->name('billing.store');
 });
 
 // -------------------------------------------------------------------

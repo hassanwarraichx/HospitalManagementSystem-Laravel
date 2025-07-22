@@ -26,7 +26,7 @@ class MedicineController extends Controller
     {
         return view('medicines.create');
     }
-    
+
     public function store(StoreMedicineRequest $request)
     {
         $dto = new MedicineData($request->validated());
@@ -45,10 +45,10 @@ class MedicineController extends Controller
         $dto = new MedicineData($request->validated());
         $this->medicineService->update($medicine, $dto);
 
-        return redirect()->back()->with('success', 'Medicine updated!');
-    
+        return redirect()->route("medicines.index")->with('success', 'Medicine updated!');
+
     }
-    
+
     public function destroy(Medicine $medicine)
     {
         $this->medicineService->delete($medicine);

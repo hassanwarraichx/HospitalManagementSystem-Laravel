@@ -42,7 +42,6 @@
                     </div>
                 @endif
 
-                {{-- 🧾 Appointment Form --}}
                 @php
                     $storeRoute = $isAdmin
                         ? route('admin.appointments.store')
@@ -128,12 +127,15 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const input = document.getElementById('appointment_time');
-            const now = new Date().toISOString().slice(0, 16);
-            input.setAttribute('min', now);
+            if (!input) return;
+
+            // Set minimum date/time to now
+            const nowISO = new Date().toISOString().slice(0, 16);
+            input.setAttribute('min', nowISO);
 
             input.addEventListener('change', function () {
                 const selectedDate = new Date(this.value);
-                if (selectedDate.getDay() === 0) {
+                if (selectedDate.getDay() === 0) { // Sunday is 0
                     this.classList.add('is-invalid');
                     this.setCustomValidity('Appointments cannot be booked on Sundays.');
                     this.reportValidity();

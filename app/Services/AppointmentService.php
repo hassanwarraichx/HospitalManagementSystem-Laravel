@@ -16,26 +16,30 @@ use App\Notifications\AppointmentBookedNotification;
 
 class AppointmentService
 {
+    /**
+     * Get all doctors with user and specialization loaded.
+     */
     public function getDoctors()
     {
         return DoctorProfile::with(['user', 'specialization'])
-            ->whereHas('user', function ($query) {
-                $query->whereNull('deleted_at');
-            })
+            ->whereHas('user', fn ($q) => $q->whereNull('deleted_at'))
             ->get();
     }
 
+    /**
+     * Get all patients with user loaded.
+     */
     public function getPatients()
     {
         return PatientProfile::with(['user'])
-            ->whereHas('user', function ($query) {
-                $query->whereNull('deleted_at');
-            })
+            ->whereHas('user', fn ($q) => $q->whereNull('deleted_at'))
             ->get();
     }
 
     /**
      * Validate and create a new appointment.
+     *
+     * @throws ValidationException
      */
     public function validateAndCreateAppointment(array $data)
     {
@@ -50,6 +54,7 @@ class AppointmentService
         }
 
         $validator = Validator::make($data, $rules);
+
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
@@ -64,10 +69,12 @@ class AppointmentService
             ]);
         }
 
+        // Parse appointment time safely
         $time = now()->parse($data['appointment_time']);
         $bufferStart = $time->copy()->subMinutes(30);
         $bufferEnd = $time->copy()->addMinutes(30);
 
+        // Check for overlapping appointments for the doctor
         $alreadyBooked = Appointment::where('doctor_id', $data['doctor_id'])
             ->whereBetween('appointment_time', [$bufferStart, $bufferEnd])
             ->exists();
@@ -87,25 +94,26 @@ class AppointmentService
         ]);
 
         try {
-            // Notify Patient (DB + Realtime, NO Email)
+            // Notify patient (no mail)
             $patientUser = optional(PatientProfile::find($patientId))->user;
             if ($patientUser) {
-                Notification::send($patientUser, new AppointmentCreatedNotification($appointment));
+                $patientUser->notify(new AppointmentCreatedNotification($appointment));
             }
 
-            // ✅ Notify all Admins (DB + Realtime)
+            // Notify all admins (real-time broadcast + database)
             $admins = User::role('admin')->get();
             Notification::send($admins, new AppointmentBookedNotification($appointment));
-
         } catch (\Throwable $e) {
-            logger()->warning('⚠️ Notification error: ' . $e->getMessage());
+            logger()->warning('⚠️ Appointment creation notifications failed: ' . $e->getMessage());
         }
 
         return $appointment;
     }
 
     /**
-     * Get appointments based on user role.
+     * Get appointments filtered by the authenticated user's role.
+     *
+     * @return \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection|static[]
      */
     public function getAppointmentsForUser()
     {
@@ -126,18 +134,27 @@ class AppointmentService
     }
 
     /**
-     * Update status and notify patient (Email sent here on approval).
+     * Update appointment status and notify patient.
      */
-    public function updateStatus(Appointment $appointment, string $status)
+    public function updateStatus(Appointment $appointment, string $status): void
     {
         $appointment->update(['status' => $status]);
 
         try {
-            if ($appointment->patient?->user) {
-                Notification::send($appointment->patient->user, new AppointmentStatusChanged($appointment));
+            $user = $appointment->patient?->user;
+
+            if ($user) {
+                $notification = new AppointmentStatusChanged($appointment);
+
+                // Only send mail if status is 'approved'
+                if ($status !== 'approved') {
+                    $notification->withoutMail();
+                }
+
+                $user->notify($notification);
             }
         } catch (\Throwable $e) {
-            logger()->warning('⚠️ Status update notification failed: ' . $e->getMessage());
+            logger()->warning('⚠️ Failed to send status change notification: ' . $e->getMessage());
         }
     }
 }

@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Appointment;
+use App\Models\Medicine;
+use App\Models\PatientProfile;
 
 class DashboardController extends Controller
 {
@@ -29,17 +30,30 @@ class DashboardController extends Controller
     }
 
     /**
-     * Doctor Dashboard with upcoming appointments.
+     * Doctor Dashboard with appointments, low stock alerts, and notifications.
      */
     public function doctorDashboard()
     {
         $user = Auth::user();
 
+        // 🩺 Doctor's Appointments (ensure doctorProfile exists)
         $appointments = $user->doctorProfile
             ? $user->doctorProfile->appointments()->latest()->get()
             : collect();
 
-        return view('doctor.dashboard', compact('appointments'));
+        // ⚠️ Low Stock Medicines (threshold can be adjusted)
+        $lowStockMedicines = Medicine::where('quantity', '<=', 10)->get();
+
+        // 🔔 Notifications: latest 10 and count unread
+        $notifications = $user->notifications()->latest()->take(10)->get();
+        $unreadNotificationsCount = $user->unreadNotifications()->count();
+
+        return view('doctor.dashboard', compact(
+            'appointments',
+            'lowStockMedicines',
+            'notifications',
+            'unreadNotificationsCount'
+        ));
     }
 
     /**
@@ -63,9 +77,20 @@ class DashboardController extends Controller
      */
     public function markAllNotificationsRead(Request $request)
     {
-        $user = $request->user();
-        $user->unreadNotifications->markAsRead();
-
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
         return back()->with('success', '🔔 All notifications marked as read.');
+    }
+
+    /**
+     * View documents for a specific patient (for doctors).
+     */
+    public function patientDocuments($patientId)
+    {
+        $patient = PatientProfile::with('user')->findOrFail($patientId);
+
+        // Assuming documents is a relation or casts to array
+        $documents = $patient->documents ?? collect();
+
+        return view('doctor.patient.documents', compact('patient', 'documents'));
     }
 }

@@ -11,7 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PrescriptionController;
-use App\Http\Controllers\ExportController; // ✅ Added ExportController
+use App\Http\Controllers\ExportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,11 +67,17 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     Route::post('/prescription/store', [PrescriptionController::class, 'store'])->name('prescription.store');
     Route::get('/prescription/view/{appointment}', [PrescriptionController::class, 'view'])->name('prescription.view');
 
-    // 📋 View Patient Medical History
+    // 📚 Patient Medical History
     Route::get('/patient/history/{patient}', [PrescriptionController::class, 'history'])->name('patient.history');
 
-    // 📥 Export Patient History as Excel ✅ Using ExportController now
+    // 📥 Export Patient History as Excel
     Route::get('/patient/history/{patient}/export', [ExportController::class, 'exportHistory'])->name('export.history');
+
+    // 🗂️ Patient Document Viewer (NEW)
+    Route::get('/patient/{patient}/documents', [DashboardController::class, 'patientDocuments'])->name('patient.documents');
+
+    // ⬇️ Export Prescriptions for a patient (NEW)
+    Route::get('/prescriptions/export/{patient}', [ExportController::class, 'exportPrescriptions'])->name('prescriptions.export');
 });
 
 // -------------------------------------------------------------------

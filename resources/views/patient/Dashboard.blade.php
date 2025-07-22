@@ -79,14 +79,14 @@
                             <td>{{ optional($appointment->doctor->user)->name ?? 'N/A' }}</td>
                             <td>{{ optional($appointment->doctor->specialization)->name ?? 'General' }}</td>
                             <td>
-                            <span class="badge rounded-pill
-                                @if($appointment->status === 'approved') bg-success
-                                @elseif($appointment->status === 'pending') bg-warning text-dark
-                                @elseif($appointment->status === 'rejected') bg-danger
-                                @else bg-secondary
-                                @endif">
-                                {{ ucfirst($appointment->status) }}
-                            </span>
+                                <span class="badge rounded-pill
+                                    @if($appointment->status === 'approved') bg-success
+                                    @elseif($appointment->status === 'pending') bg-warning text-dark
+                                    @elseif($appointment->status === 'rejected') bg-danger
+                                    @else bg-secondary
+                                    @endif">
+                                    {{ ucfirst($appointment->status) }}
+                                </span>
                             </td>
                             <td>
                                 @if($appointment->prescription)

@@ -45,23 +45,24 @@
 @push('scripts')
     <script>
         let index = 1;
+
         document.getElementById('add-medication').addEventListener('click', function () {
             const container = document.getElementById('medications-list');
             const html = `
-        <div class="medication-item row mb-3">
-            <div class="col-md-4">
-                <input type="text" name="medications[${index}][name]" class="form-control" placeholder="Medicine Name" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="medications[${index}][dose]" class="form-control" placeholder="Dose" required>
-            </div>
-            <div class="col-md-3">
-                <input type="text" name="medications[${index}][duration]" class="form-control" placeholder="Duration" required>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-danger remove-medication">✖</button>
-            </div>
-        </div>`;
+                <div class="medication-item row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" name="medications[${index}][name]" class="form-control" placeholder="Medicine Name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="medications[${index}][dose]" class="form-control" placeholder="Dose (e.g. 500mg)" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="medications[${index}][duration]" class="form-control" placeholder="Duration (e.g. 5 days)" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger remove-medication">✖</button>
+                    </div>
+                </div>`;
             container.insertAdjacentHTML('beforeend', html);
             index++;
         });
